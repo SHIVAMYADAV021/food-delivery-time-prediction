@@ -1,0 +1,2587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Food Delivery Time Prediction</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f1f4fa;
+            color: #14213d;
+        }
+
+        button,
+        input,
+        select {
+            font-family: inherit;
+        }
+
+        /* =========================
+           APP LAYOUT
+        ========================= */
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* =========================
+           SIDEBAR
+        ========================= */
+
+        .sidebar {
+            width: 140px;
+            min-width: 140px;
+            background: linear-gradient(180deg, #071b3a, #06152e);
+            color: white;
+            min-height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+            padding: 16px 10px;
+        }
+
+        .brand {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .brand .logo {
+            width: 105px;
+            height: 55px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 7px;
+        }
+
+        .brand h2 {
+            font-size: 13px;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .brand p {
+            font-size: 8px;
+            color: #b9c6dd;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .nav-item {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: #dce5f5;
+            padding: 9px 6px;
+            border-radius: 7px;
+            font-size: 9px;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.2s;
+        }
+
+        .nav-item span {
+            display: inline-block;
+            margin-right: 4px;
+        }
+
+        .nav-item:hover {
+            background: rgba(109, 53, 255, 0.35);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, #6929ed, #7d39ff);
+            color: white;
+            box-shadow: 0 5px 15px rgba(91, 36, 220, 0.3);
+        }
+
+        /* Rider is now safely contained */
+        .sidebar-rider {
+            display: none;
+        }
+
+        /* =========================
+           MAIN CONTENT
+        ========================= */
+
+        .main-content {
+            margin-left: 140px;
+            width: calc(100% - 140px);
+            padding: 10px 12px 30px;
+            min-height: 100vh;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active-page {
+            display: block;
+        }
+
+        /* =========================
+           HERO
+        ========================= */
+
+        .hero {
+            min-height: 225px;
+            background: white;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 30px 38px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 3px 15px rgba(28, 44, 76, 0.05);
+        }
+
+        .hero::after {
+            content: "";
+            width: 150px;
+            height: 150px;
+            position: absolute;
+            right: -55px;
+            top: -65px;
+            background: #f5f1ff;
+            border-radius: 50%;
+        }
+
+        .hero-content {
+            width: 57%;
+            position: relative;
+            z-index: 2;
+        }
+
+        .project-label {
+            display: block;
+            font-size: 9px;
+            color: #34415b;
+            margin-bottom: 5px;
+            letter-spacing: 0.3px;
+        }
+
+        .hero h1 {
+            font-size: 22px;
+            line-height: 1.2;
+            color: #14213d;
+            margin-bottom: 7px;
+        }
+
+        .hero h1 span {
+            display: inline;
+        }
+
+        .hero p {
+            font-size: 9px;
+            line-height: 1.5;
+            color: #657087;
+            max-width: 650px;
+            margin-bottom: 12px;
+        }
+
+        .hero-image {
+            width: 38%;
+            height: 190px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-image img {
+            width: 100%;
+            max-width: 285px;
+            max-height: 185px;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* =========================
+           BUTTONS
+        ========================= */
+
+        .primary-btn,
+        .secondary-btn,
+        .predict-btn {
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .primary-btn {
+            background: linear-gradient(90deg, #6929ed, #7d39ff);
+            color: white;
+            padding: 8px 14px;
+            font-size: 9px;
+            box-shadow: 0 5px 12px rgba(105, 41, 237, 0.25);
+        }
+
+        .primary-btn:hover,
+        .predict-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 7px 18px rgba(105, 41, 237, 0.3);
+        }
+
+        .secondary-btn {
+            background: #f1edff;
+            color: #6324e9;
+            padding: 9px 15px;
+            font-size: 10px;
+        }
+
+        /* =========================
+           STAT CARDS
+        ========================= */
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 9px;
+            min-height: 60px;
+            padding: 11px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 10px rgba(28, 44, 76, 0.04);
+        }
+
+        .stat-icon {
+            width: 30px;
+            height: 30px;
+            min-width: 30px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+
+        .purple {
+            background: #eee8ff;
+            color: #6428e9;
+        }
+
+        .green {
+            background: #e9f8f0;
+            color: #219463;
+        }
+
+        .blue {
+            background: #eaf2ff;
+            color: #3272cf;
+        }
+
+        .orange {
+            background: #fff1df;
+            color: #df791c;
+        }
+
+        .stat-card p {
+            font-size: 8px;
+            color: #78839a;
+            margin-bottom: 2px;
+        }
+
+        .stat-card h2 {
+            font-size: 13px;
+            color: #172440;
+            margin-bottom: 1px;
+        }
+
+        .stat-card small {
+            font-size: 7px;
+            color: #9aa3b5;
+        }
+
+        /* =========================
+           WELCOME CARD
+        ========================= */
+
+        .welcome-card {
+            margin-top: 10px;
+            min-height: 130px;
+            background: white;
+            border-radius: 10px;
+            padding: 22px 28px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(28, 44, 76, 0.04);
+        }
+
+        .welcome-content {
+            width: 58%;
+            position: relative;
+            z-index: 3;
+        }
+
+        .welcome-card h2 {
+            font-size: 15px;
+            color: #182744;
+            margin-bottom: 7px;
+        }
+
+        .welcome-card p {
+            color: #748097;
+            font-size: 9px;
+            line-height: 1.6;
+            max-width: 620px;
+            margin-bottom: 12px;
+        }
+
+        /* IMPORTANT:
+           Rider stays INSIDE welcome card */
+        .welcome-rider {
+            position: absolute;
+            right: 15px;
+            bottom: -20px;
+            width: 320px;
+            height: 220px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .welcome-rider img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center bottom;
+            display: block;
+        }
+
+        /* =========================
+           PAGE HEADER
+        ========================= */
+
+        .page-header {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 25px;
+            margin-bottom: 12px;
+        }
+
+        .page-header h1 {
+            font-size: 21px;
+            color: #172440;
+            margin-bottom: 6px;
+        }
+
+        .page-header p {
+            font-size: 10px;
+            color: #78839a;
+        }
+
+        /* =========================
+           PREDICTION
+        ========================= */
+
+        .prediction-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.6fr) minmax(260px, 0.8fr);
+            gap: 12px;
+        }
+
+        .prediction-card,
+        .result-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(28, 44, 76, 0.04);
+        }
+
+        .prediction-card h2 {
+            font-size: 15px;
+            margin-bottom: 18px;
+            color: #172440;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 13px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 9px;
+            color: #536078;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            height: 35px;
+            border: 1px solid #dfe4ed;
+            border-radius: 6px;
+            padding: 0 10px;
+            font-size: 10px;
+            color: #26344e;
+            background: white;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #7540ed;
+            box-shadow: 0 0 0 2px rgba(117, 64, 237, 0.08);
+        }
+
+        .predict-btn {
+            width: 100%;
+            margin-top: 18px;
+            height: 40px;
+            background: linear-gradient(90deg, #6929ed, #7d39ff);
+            color: white;
+            font-size: 10px;
+        }
+
+        /* =========================
+           RESULT
+        ========================= */
+
+        .result-card {
+            text-align: center;
+            min-height: 400px;
+        }
+
+        .result-title {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 25px;
+        }
+
+        .result-title span {
+            font-size: 18px;
+        }
+
+        .result-title h2 {
+            font-size: 15px;
+            color: #172440;
+        }
+
+        .result-circle {
+            width: 190px;
+            height: 190px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f1ebff, #faf8ff);
+            border: 9px solid #eee7ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-circle strong {
+            display: block;
+            font-size: 38px;
+            color: #6328e8;
+        }
+
+        .result-circle span {
+            font-size: 10px;
+            color: #8992a5;
+        }
+
+        .result-card h3 {
+            font-size: 12px;
+            margin-bottom: 10px;
+            color: #1b2944;
+        }
+
+        .result-message {
+            background: #f7f8fc;
+            padding: 12px;
+            border-radius: 7px;
+            font-size: 9px;
+            line-height: 1.5;
+            color: #768197;
+        }
+
+        /* =========================
+           DATASET
+        ========================= */
+
+        .analysis-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .analysis-card {
+            background: white;
+            padding: 16px;
+            border-radius: 10px;
+        }
+
+        .analysis-card > span {
+            font-size: 18px;
+            color: #6b31ea;
+        }
+
+        .analysis-card p {
+            font-size: 9px;
+            color: #78839a;
+            margin: 8px 0 4px;
+        }
+
+        .analysis-card h2 {
+            font-size: 18px;
+            color: #172440;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .chart-card h3 {
+            font-size: 12px;
+            color: #172440;
+            margin-bottom: 20px;
+        }
+
+        .fake-chart {
+            height: 180px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            border-bottom: 1px solid #dfe4ed;
+            padding: 0 10px;
+        }
+
+        .fake-chart span {
+            width: 7%;
+            background: linear-gradient(to top, #6830e9, #a07bff);
+            border-radius: 4px 4px 0 0;
+        }
+
+        .chart-label {
+            text-align: center;
+            font-size: 9px;
+            color: #8b94a7;
+            margin-top: 10px;
+        }
+
+        .horizontal-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .horizontal-bars label {
+            display: block;
+            font-size: 9px;
+            color: #68748a;
+            margin-bottom: 4px;
+        }
+
+        .bar {
+            width: 100%;
+            height: 25px;
+            background: #f0f2f7;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .bar span {
+            display: block;
+            height: 100%;
+            line-height: 25px;
+            background: linear-gradient(90deg, #6a30ea, #9165f4);
+            color: white;
+            font-size: 8px;
+            padding-left: 8px;
+            border-radius: 5px;
+        }
+
+        /* =========================
+           PERFORMANCE
+        ========================= */
+
+        .model-name-card {
+            background: white;
+            border-radius: 10px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+
+        .model-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            background: #eee8ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 23px;
+        }
+
+        .model-name-card span {
+            font-size: 8px;
+            color: #8a93a7;
+        }
+
+        .model-name-card h2 {
+            font-size: 16px;
+            color: #172440;
+            margin-top: 4px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 10px;
+            padding: 18px;
+        }
+
+        .metric-card span {
+            font-size: 9px;
+            color: #7b8598;
+        }
+
+        .metric-card strong {
+            display: block;
+            font-size: 25px;
+            color: #6328e8;
+            margin: 8px 0 4px;
+        }
+
+        .metric-card small {
+            font-size: 8px;
+            color: #9098aa;
+        }
+
+        .performance-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .performance-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 13px;
+        }
+
+        .performance-header h3 {
+            font-size: 11px;
+        }
+
+        .performance-header strong {
+            font-size: 11px;
+            color: #6328e8;
+        }
+
+        .progress {
+            width: 100%;
+            height: 9px;
+            background: #eceef4;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            width: 89.2%;
+            height: 100%;
+            background: linear-gradient(90deg, #682be8, #9261f5);
+            border-radius: 10px;
+        }
+
+        .performance-card p {
+            font-size: 9px;
+            color: #78839a;
+        }
+
+        /* =========================
+           ABOUT
+        ========================= */
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .about-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .about-card.large {
+            grid-column: span 2;
+        }
+
+        .about-icon {
+            font-size: 23px;
+            margin-bottom: 10px;
+        }
+
+        .about-card h3 {
+            font-size: 13px;
+            color: #172440;
+            margin-bottom: 10px;
+        }
+
+        .about-card p,
+        .about-card li {
+            font-size: 9px;
+            color: #78839a;
+            line-height: 1.7;
+        }
+
+        .about-card ul {
+            padding-left: 17px;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 1000px) {
+
+            .sidebar {
+                width: 120px;
+                min-width: 120px;
+            }
+
+            .main-content {
+                margin-left: 120px;
+                width: calc(100% - 120px);
+            }
+
+            .stats-grid,
+            .analysis-stats,
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .prediction-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .welcome-rider {
+                width: 270px;
+            }
+        }
+
+        @media (max-width: 700px) {
+
+            .sidebar {
+                position: relative;
+                width: 100%;
+                min-width: 100%;
+                min-height: auto;
+            }
+
+            .app-container {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .sidebar-nav {
+                flex-direction: row;
+                overflow-x: auto;
+            }
+
+            .nav-item {
+                min-width: 120px;
+            }
+
+            .hero {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .hero-content {
+                width: 100%;
+            }
+
+            .hero-image {
+                width: 100%;
+            }
+
+            .stats-grid,
+            .analysis-stats,
+            .metrics-grid,
+            .form-grid,
+            .about-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .about-card.large {
+                grid-column: span 1;
+            }
+
+            .welcome-content {
+                width: 100%;
+            }
+
+            .welcome-rider {
+                position: relative;
+                right: auto;
+                bottom: auto;
+                width: 100%;
+                height: 220px;
+                margin-top: 10px;
+            }
+        }
+
+
+        /* =========================================================
+           FINAL HOME-PAGE VISUAL UPDATE
+           Matches the supplied reference dashboard
+        ========================================================= */
+        .sidebar {
+            width: 154px;
+            min-width: 154px;
+            padding: 18px 10px 12px;
+            background: linear-gradient(180deg, #071b3a 0%, #06152e 100%);
+        }
+
+        .main-content {
+            margin-left: 154px;
+            width: calc(100% - 154px);
+            padding: 12px 16px 35px;
+        }
+
+        .brand {
+            margin-bottom: 25px;
+        }
+
+        .brand .logo {
+            width: 112px;
+            height: 58px;
+            margin-bottom: 8px;
+        }
+
+        .brand h2 {
+            font-size: 15px;
+        }
+
+        .brand p {
+            font-size: 9px;
+        }
+
+        .sidebar-nav {
+            gap: 7px;
+        }
+
+        .nav-item {
+            min-height: 40px;
+            padding: 9px 8px;
+            border-radius: 9px;
+            font-size: 10px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .nav-item span {
+            width: 17px;
+            margin-right: 0;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .sidebar-rider {
+            display: block;
+            position: absolute;
+            left: 3px;
+            right: 3px;
+            bottom: 8px;
+            height: 165px;
+            overflow: hidden;
+            opacity: .96;
+        }
+
+        .sidebar-rider img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center bottom;
+        }
+
+        /* HERO */
+        .hero {
+            min-height: 350px;
+            border-radius: 18px;
+            padding: 40px 54px;
+            grid-template-columns: 1.35fr .9fr;
+            box-shadow: 0 4px 18px rgba(28, 44, 76, .06);
+        }
+
+        .project-label {
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        .hero h1 {
+            font-size: 30px;
+            line-height: 1.18;
+            margin-bottom: 11px;
+        }
+
+        .hero h1 span {
+            color: #6930ed;
+        }
+
+        .hero p {
+            max-width: 650px;
+            font-size: 12px;
+            line-height: 1.65;
+            margin-bottom: 19px;
+        }
+
+        .hero-image {
+            height: 270px;
+        }
+
+        .hero-image img {
+            width: 100%;
+            height: 100%;
+            max-width: 410px;
+            object-fit: contain;
+        }
+
+        .primary-btn {
+            padding: 11px 18px;
+            border-radius: 8px;
+            font-size: 11px;
+        }
+
+        /* STAT CARDS */
+        .stats-grid {
+            gap: 12px;
+            margin-top: 13px;
+        }
+
+        .stat-card {
+            min-height: 92px;
+            border-radius: 12px;
+            padding: 16px;
+            gap: 13px;
+        }
+
+        .stat-icon {
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+            border-radius: 10px;
+            font-size: 18px;
+        }
+
+        .stat-card p {
+            font-size: 9px;
+            margin-bottom: 4px;
+        }
+
+        .stat-card h2 {
+            font-size: 17px;
+            margin-bottom: 3px;
+        }
+
+        .stat-card small {
+            font-size: 8px;
+        }
+
+        /* WELCOME CARD */
+        .welcome-card {
+            min-height: 205px;
+            margin-top: 13px;
+            padding: 29px 38px;
+            border-radius: 15px;
+        }
+
+        .welcome-content {
+            width: 63%;
+        }
+
+        .welcome-card h2 {
+            font-size: 19px;
+            margin-bottom: 10px;
+        }
+
+        .welcome-card p {
+            font-size: 11px;
+            line-height: 1.75;
+            max-width: 700px;
+            margin-bottom: 17px;
+        }
+
+        .secondary-btn {
+            padding: 11px 17px;
+            border-radius: 8px;
+            font-size: 11px;
+        }
+
+        .welcome-rider {
+            right: 0;
+            bottom: -40px;
+            width: 430px;
+            height: 270px;
+        }
+
+        /* Keep the rest of the pages unchanged, but use the same card language. */
+        .page-header,
+        .prediction-card,
+        .result-card,
+        .analysis-card,
+        .chart-card,
+        .model-name-card,
+        .metric-card,
+        .performance-card,
+        .about-card {
+            box-shadow: 0 3px 13px rgba(28, 44, 76, .045);
+        }
+
+        @media (max-width: 850px) {
+            .sidebar {
+                width: 125px;
+                min-width: 125px;
+            }
+
+            .main-content {
+                margin-left: 125px;
+                width: calc(100% - 125px);
+            }
+        }
+
+        @media (max-width: 620px) {
+            .sidebar {
+                width: 100%;
+                min-width: 100%;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .sidebar-rider {
+                display: none;
+            }
+        }
+
+
+        /* =========================
+           CLEAN MODEL PERFORMANCE
+        ========================= */
+        .performance-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
+            gap: 14px;
+        }
+
+        .performance-card, .final-model-card {
+            background: #ffffff;
+            border: 1px solid #e1e6ee;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .performance-table-card {
+            grid-column: 1 / -1;
+        }
+
+        .performance-card-head {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .performance-card-head h2 {
+            font-size: 16px;
+            color: #172440;
+            margin-bottom: 5px;
+        }
+
+        .performance-card-head p {
+            font-size: 10px;
+            color: #7a8496;
+            line-height: 1.5;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        .clean-model-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 620px;
+        }
+
+        .clean-model-table th {
+            background: #f6f7f9;
+            color: #687388;
+            font-size: 9px;
+            font-weight: 600;
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: 1px solid #dfe4ec;
+        }
+
+        .clean-model-table td {
+            color: #27344d;
+            font-size: 10px;
+            padding: 13px 14px;
+            border-bottom: 1px solid #edf0f4;
+        }
+
+        .clean-model-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .clean-model-table .best-row {
+            background: #f7f8fb;
+        }
+
+        .selected-label {
+            display: inline-block;
+            margin-left: 7px;
+            padding: 3px 7px;
+            border-radius: 4px;
+            background: #e9edf3;
+            color: #4f5c70;
+            font-size: 8px;
+            font-weight: 600;
+        }
+
+        .score-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-top: 4px;
+        }
+
+        .score-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 7px;
+            color: #3c475b;
+            font-size: 10px;
+        }
+
+        .score-top strong {
+            color: #172440;
+            font-size: 10px;
+        }
+
+        .score-track {
+            height: 8px;
+            background: #e9edf2;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .score-track span {
+            display: block;
+            height: 100%;
+            background: #52647d;
+            border-radius: 4px;
+        }
+
+        .negative-track span {
+            background: #9aa3b2;
+        }
+
+        .error-card {
+            grid-column: 1 / -1;
+        }
+
+        .error-grid {
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid #e5e9ef;
+        }
+
+        .error-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            padding: 13px 4px;
+            border-bottom: 1px solid #edf0f4;
+            color: #354158;
+            font-size: 10px;
+        }
+
+        .error-row:last-child {
+            border-bottom: none;
+        }
+
+        .error-values {
+            display: flex;
+            gap: 22px;
+            color: #687388;
+            font-size: 9px;
+        }
+
+        .best-error {
+            color: #172440;
+            background: #f7f8fa;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+        .best-error .error-values {
+            color: #172440;
+        }
+
+        .final-model-card {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 25px;
+            background: #f7f8fa;
+            border-color: #d9dee7;
+        }
+
+        .final-label {
+            display: block;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: .8px;
+            color: #7a8496;
+            margin-bottom: 7px;
+        }
+
+        .final-model-card h2 {
+            font-size: 18px;
+            color: #172440;
+            margin-bottom: 7px;
+        }
+
+        .final-model-card p {
+            max-width: 720px;
+            font-size: 10px;
+            line-height: 1.6;
+            color: #69758a;
+        }
+
+        .final-score {
+            min-width: 120px;
+            text-align: center;
+            border-left: 1px solid #d9dee7;
+            padding-left: 24px;
+        }
+
+        .final-score span, .final-score small {
+            display: block;
+            color: #7a8496;
+            font-size: 8px;
+        }
+
+        .final-score strong {
+            display: block;
+            color: #172440;
+            font-size: 24px;
+            margin: 4px 0;
+        }
+
+        @media (max-width: 900px) {
+            .performance-layout {
+                grid-template-columns: 1fr;
+            }
+            .performance-table-card, .error-card, .final-model-card {
+                grid-column: auto;
+            }
+        }
+
+        @media (max-width: 620px) {
+            .final-model-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .final-score {
+                border-left: none;
+                border-top: 1px solid #d9dee7;
+                width: 100%;
+                padding: 14px 0 0;
+            }
+            .error-row {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 6px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="app-container">
+
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <img
+                src="/ui/assets/logo.png"
+                alt="Food Delivery Logo"
+                class="logo"
+            >
+
+            <h2>Food Delivery</h2>
+            <p>Time Prediction</p>
+
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <button
+                class="nav-item active"
+                onclick="showPage('home', this)"
+            >
+                <span>⌂</span> Home
+            </button>
+
+            <button
+                class="nav-item"
+                onclick="showPage('prediction', this)"
+            >
+                <span>◉</span> Predict Delivery Time
+            </button>
+
+            <button
+                class="nav-item"
+                onclick="showPage('dataset', this)"
+            >
+                <span>▦</span> Dataset Analysis
+            </button>
+
+            <button
+                class="nav-item"
+                onclick="showPage('performance', this)"
+            >
+                <span>▥</span> Model Performance
+            </button>
+
+            <button
+                class="nav-item"
+                onclick="showPage('about', this)"
+            >
+                <span>ⓘ</span> About Project
+            </button>
+
+        </nav>
+
+    </aside>
+
+
+    <!-- =========================
+         MAIN
+    ========================== -->
+
+    <main class="main-content">
+
+
+        <!-- =========================
+             HOME PAGE
+        ========================== -->
+
+        <section id="home" class="page active-page">
+
+            <div class="hero">
+
+                <div class="hero-content">
+
+                    <span class="project-label">
+                        MACHINE LEARNING PROJECT
+                    </span>
+
+                    <h1>
+                        Food Delivery Time Prediction
+                    </h1>
+
+                    <p>
+                        Predict the estimated food delivery time based on
+                        delivery partner details, traffic, weather,
+                        vehicle condition and distance.
+                    </p>
+
+                    <button
+                        class="primary-btn"
+                        onclick="openPrediction()"
+                    >
+                        🚀 Start Prediction
+                    </button>
+
+                </div>
+
+
+                <div class="hero-image">
+
+                    <img
+                        src="/ui/assets/delivery.png"
+                        alt="Food Delivery"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- STAT CARDS -->
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div class="stat-icon purple">
+                        ▣
+                    </div>
+
+                    <div>
+                        <p>Total Records</p>
+                        <h2>41,953</h2>
+                        <small>Rows in Dataset</small>
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon green">
+                        ♟
+                    </div>
+
+                    <div>
+                        <p>Total Features</p>
+                        <h2>20</h2>
+                        <small>Input Features</small>
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon blue">
+                        ▥
+                    </div>
+
+                    <div>
+                        <p>Problem Type</p>
+                        <h2>Regression</h2>
+                        <small>ML Problem</small>
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon orange">
+                        ◉
+                    </div>
+
+                    <div>
+                        <p>Target Variable</p>
+                        <h2>Time_taken(min)</h2>
+                        <small>Delivery Time</small>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- WELCOME -->
+
+            <div class="welcome-card">
+
+                <div class="welcome-content">
+
+                    <h2>Welcome!</h2>
+
+                    <p>
+                        In this project, I have used Machine Learning to predict food delivery time. The prediction depends on things like traffic, weather, delivery partner details, vehicle condition, order type and distance.
+                    </p>
+
+                    <button
+                        class="secondary-btn"
+                        onclick="openPrediction()"
+                    >
+                        Start Prediction →
+                    </button>
+
+                </div>
+
+
+                <!-- RIDER IMAGE -->
+                <div class="welcome-rider">
+
+                    <img
+                        src="/ui/assets/rider.png"
+                        alt="Delivery Rider"
+                    >
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             PREDICTION PAGE
+        ========================== -->
+
+        <section id="prediction" class="page">
+
+            <div class="page-header">
+
+                <h1>Predict Delivery Time</h1>
+
+                <p>
+                    Fill in the delivery details to get the predicted
+                    delivery time.
+                </p>
+
+            </div>
+
+
+            <div class="prediction-layout">
+
+                <!-- FORM -->
+
+                <div class="prediction-card">
+
+                    <h2>📋 Delivery Details</h2>
+
+                    <form id="predictionForm">
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Delivery Person Age
+                                </label>
+
+                                <input
+                                    type="number"
+                                    id="Delivery_person_Age"
+                                    value="25"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Delivery Person Rating
+                                </label>
+
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    id="Delivery_person_Ratings"
+                                    value="4.7"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Weather Conditions
+                                </label>
+
+                                <select id="Weatherconditions">
+
+                                    <option value="Sunny">
+                                        Sunny
+                                    </option>
+
+                                    <option value="Cloudy">
+                                        Cloudy
+                                    </option>
+
+                                    <option value="Fog">
+                                        Fog
+                                    </option>
+
+                                    <option value="Rainy">
+                                        Rainy
+                                    </option>
+
+                                    <option value="Stormy">
+                                        Stormy
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Road Traffic Density
+                                </label>
+
+                                <select id="Road_traffic_density">
+
+                                    <option value="Low">
+                                        Low
+                                    </option>
+
+                                    <option value="Moderate">
+                                        Moderate
+                                    </option>
+
+                                    <option value="High">
+                                        High
+                                    </option>
+
+                                    <option value="Jam">
+                                        Jam
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Vehicle Condition
+                                </label>
+
+                                <select id="Vehicle_condition">
+
+                                    <option value="1">
+                                        Poor
+                                    </option>
+
+                                    <option value="2" selected>
+                                        Good
+                                    </option>
+
+                                    <option value="3">
+                                        Excellent
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Type of Order
+                                </label>
+
+                                <select id="Type_of_order">
+
+                                    <option value="Meal">
+                                        Meal
+                                    </option>
+
+                                    <option value="Drinks">
+                                        Drinks
+                                    </option>
+
+                                    <option value="Buffet">
+                                        Buffet
+                                    </option>
+
+                                    <option value="Snack">
+                                        Snack
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Type of Vehicle
+                                </label>
+
+                                <select id="Type_of_vehicle">
+
+                                    <option value="motorcycle">
+                                        Motorcycle
+                                    </option>
+
+                                    <option value="scooter">
+                                        Scooter
+                                    </option>
+
+                                    <option value="electric_scooter">
+                                        Electric Scooter
+                                    </option>
+
+                                    <option value="bicycle">
+                                        Bicycle
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Multiple Deliveries
+                                </label>
+
+                                <select id="multiple_deliveries">
+
+                                    <option value="0">
+                                        No
+                                    </option>
+
+                                    <option value="1">
+                                        1
+                                    </option>
+
+                                    <option value="2">
+                                        2
+                                    </option>
+
+                                    <option value="3">
+                                        3
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Festival
+                                </label>
+
+                                <select id="Festival">
+
+                                    <option value="No">
+                                        No
+                                    </option>
+
+                                    <option value="Yes">
+                                        Yes
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    City
+                                </label>
+
+                                <select id="City">
+
+                                    <option value="Urban">
+                                        Urban
+                                    </option>
+
+                                    <option value="Metropolitan">
+                                        Metropolitan
+                                    </option>
+
+                                    <option value="Semi-Urban">
+                                        Semi-Urban
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Distance (km)
+                                </label>
+
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    id="Distance_km"
+                                    value="5"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            type="submit"
+                            class="predict-btn"
+                            id="predictButton"
+                        >
+                            🚀 Predict Delivery Time
+                        </button>
+
+                    </form>
+
+                </div>
+
+
+                <!-- RESULT -->
+
+                <div class="result-card">
+
+                    <div class="result-title">
+
+                        <span>◷</span>
+
+                        <h2>
+                            Prediction Result
+                        </h2>
+
+                    </div>
+
+
+                    <div class="result-circle">
+
+                        <div>
+
+                            <strong id="resultValue">
+                                --
+                            </strong>
+
+                            <span>
+                                Minutes
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <h3>
+                        Estimated Delivery Time
+                    </h3>
+
+
+                    <div
+                        class="result-message"
+                        id="resultMessage"
+                    >
+                        Enter the delivery details and click
+                        <b>Predict Delivery Time</b>.
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             DATASET
+        ========================== -->
+
+        <section id="dataset" class="page">
+
+            <div class="page-header">
+
+                <h1>Dataset Analysis</h1>
+
+                <p>
+                    Explore important information about the dataset.
+                </p>
+
+            </div>
+
+
+            <div class="analysis-stats">
+
+                <div class="analysis-card">
+                    <span>▣</span>
+                    <p>Total Records</p>
+                    <h2>41,953</h2>
+                </div>
+
+                <div class="analysis-card">
+                    <span>♟</span>
+                    <p>Total Features</p>
+                    <h2>20</h2>
+                </div>
+
+                <div class="analysis-card">
+                    <span>⚠</span>
+                    <p>Missing Values</p>
+                    <h2>2,104</h2>
+                </div>
+
+                <div class="analysis-card">
+                    <span>▦</span>
+                    <p>Duplicate Rows</p>
+                    <h2>135</h2>
+                </div>
+
+            </div>
+
+
+            <div class="charts-grid">
+
+                <div class="chart-card">
+
+                    <h3>
+                        Delivery Time Distribution
+                    </h3>
+
+                    <div class="fake-chart">
+
+                        <span style="height:20%"></span>
+                        <span style="height:30%"></span>
+                        <span style="height:45%"></span>
+                        <span style="height:65%"></span>
+                        <span style="height:85%"></span>
+                        <span style="height:100%"></span>
+                        <span style="height:80%"></span>
+                        <span style="height:65%"></span>
+                        <span style="height:50%"></span>
+                        <span style="height:35%"></span>
+                        <span style="height:20%"></span>
+
+                    </div>
+
+                    <div class="chart-label">
+                        Delivery Time (minutes)
+                    </div>
+
+                </div>
+
+
+                <div class="chart-card">
+
+                    <h3>
+                        Average Delivery Time by Traffic
+                    </h3>
+
+                    <div class="horizontal-bars">
+
+                        <div>
+                            <label>Low</label>
+                            <div class="bar">
+                                <span style="width:48%">
+                                    20.1 min
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label>Moderate</label>
+                            <div class="bar">
+                                <span style="width:65%">
+                                    27.6 min
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label>High</label>
+                            <div class="bar">
+                                <span style="width:82%">
+                                    34.8 min
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label>Jam</label>
+                            <div class="bar">
+                                <span style="width:100%">
+                                    42.3 min
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+    <!-- =========================
+     MODEL PERFORMANCE
+========================= -->
+<section id="performance" class="page">
+
+    <div class="page-header">
+        <h1>Model Performance</h1>
+        <p>Comparison of the regression models tested on the same test set.</p>
+    </div>
+
+    <div class="performance-layout">
+
+        <div class="performance-card performance-table-card">
+            <div class="performance-card-head">
+                <div>
+                    <h2>Regression Model Results</h2>
+                    <p>Lower MAE, MSE and RMSE are better. Higher R² is better.</p>
+                </div>
+            </div>
+
+            <div class="table-scroll">
+                <table class="clean-model-table">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>MAE</th>
+                            <th>MSE</th>
+                            <th>RMSE</th>
+                            <th>R²</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Linear Regression</td>
+                            <td>8.54</td>
+                            <td>139.64</td>
+                            <td>11.82</td>
+                            <td>-0.6208</td>
+                        </tr>
+                        <tr>
+                            <td>Decision Tree Regressor</td>
+                            <td>4.03</td>
+                            <td>28.02</td>
+                            <td>5.29</td>
+                            <td>0.6748</td>
+                        </tr>
+                        <tr class="best-row">
+                            <td><strong>Random Forest Regressor</strong> <span class="selected-label">Selected</span></td>
+                            <td><strong>4.34</strong></td>
+                            <td><strong>30.16</strong></td>
+                            <td><strong>5.49</strong></td>
+                            <td><strong>0.6499</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="performance-card r2-card">
+            <div class="performance-card-head">
+                <div>
+                    <h2>R² Score Comparison</h2>
+                    <p>Higher score indicates a better fit to the test data.</p>
+                </div>
+            </div>
+
+            <div class="score-list">
+                <div class="score-item">
+                    <div class="score-top">
+                        <span>Linear Regression</span>
+                        <strong>-0.6208</strong>
+                    </div>
+                    <div class="score-track negative-track"><span style="width: 31%;"></span></div>
+                </div>
+
+                <div class="score-item">
+                    <div class="score-top">
+                        <span>Decision Tree</span>
+                        <strong>0.6748</strong>
+                    </div>
+                    <div class="score-track"><span style="width: 67.48%;"></span></div>
+                </div>
+
+                <div class="score-item">
+                    <div class="score-top">
+                        <span>Random Forest</span>
+                        <strong>0.6499</strong>
+                    </div>
+                    <div class="score-track"><span style="width: 64.99%;"></span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="performance-card error-card">
+            <div class="performance-card-head">
+                <div>
+                    <h2>Error Comparison</h2>
+                    <p>These values show how far predictions are from the actual delivery time.</p>
+                </div>
+            </div>
+
+            <div class="error-grid">
+                <div class="error-row">
+                    <span>Linear Regression</span>
+                    <div class="error-values"><b>MAE 8.54</b><b>RMSE 11.82</b></div>
+                </div>
+                <div class="error-row">
+                    <span>Decision Tree</span>
+                    <div class="error-values"><b>MAE 4.03</b><b>RMSE 5.29</b></div>
+                </div>
+                <div class="error-row best-error">
+                    <span><strong>Random Forest</strong></span>
+                    <div class="error-values"><b>MAE 3.78</b><b>RMSE 4.91</b></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="final-model-card">
+            <div>
+                <span class="final-label">FINAL MODEL</span>
+                <h2>Random Forest Regressor</h2>
+                <p>The deployment-optimized Random Forest balances prediction quality with a much smaller model size for free hosting.</p>
+            </div>
+            <div class="final-score">
+                <span>R² Score</span>
+                <strong>0.6499</strong>
+                <small>64.99%</small>
+            </div>
+        </div>
+
+    </div>
+
+</section>
+        <!-- =========================
+     ABOUT
+========================== -->
+
+<section id="about" class="page">
+
+    <div class="page-header">
+        <h1>About Project</h1>
+        <p>Food Delivery Time Prediction using Machine Learning.</p>
+    </div>
+
+    <div class="about-grid">
+
+        <!-- Project -->
+        <div class="about-card large">
+            <h3>Project Objective</h3>
+            <p>
+                This project predicts food delivery time in minutes
+                using customer, restaurant, delivery and traffic-related
+                information.
+            </p>
+        </div>
+
+        <!-- Dataset -->
+        <div class="about-card">
+            <h3>Dataset</h3>
+
+            <p><b>Records:</b> 41,953</p>
+            <p><b>Features:</b> 20</p>
+            <p><b>Target:</b> Time_taken(min)</p>
+        </div>
+
+        <!-- Technologies -->
+        <div class="about-card">
+            <h3>Technologies</h3>
+
+            <p>Python · Pandas · NumPy</p>
+            <p>Scikit-learn · Matplotlib · Flask</p>
+        </div>
+
+        <!-- College -->
+        <div class="about-card large">
+            <h3>College</h3>
+
+            <p>
+                Indus University, Ahmedabad
+            </p>
+
+            <p>
+                B.Tech Computer Science & Engineering
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     JAVASCRIPT
+========================= -->
+
+<script>
+
+    /* =========================
+       PAGE NAVIGATION
+    ========================= */
+
+    function showPage(pageId, button) {
+
+        document.querySelectorAll(".page").forEach(function(page) {
+            page.classList.remove("active-page");
+        });
+
+        const page = document.getElementById(pageId);
+
+        if (page) {
+            page.classList.add("active-page");
+        }
+
+        document.querySelectorAll(".nav-item").forEach(function(item) {
+            item.classList.remove("active");
+        });
+
+        if (button) {
+            button.classList.add("active");
+        }
+    }
+
+
+    /* =========================
+       OPEN PREDICTION
+    ========================= */
+
+    function openPrediction() {
+
+        document.querySelectorAll(".page").forEach(function(page) {
+            page.classList.remove("active-page");
+        });
+
+        document.getElementById("prediction")
+            .classList.add("active-page");
+
+        document.querySelectorAll(".nav-item").forEach(function(item) {
+            item.classList.remove("active");
+        });
+
+        document.querySelectorAll(".nav-item")[1]
+            .classList.add("active");
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    }
+
+
+    /* =========================
+       PREDICTION API
+    ========================= */
+
+    document
+        .getElementById("predictionForm")
+        .addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const button =
+                document.getElementById("predictButton");
+
+            const result =
+                document.getElementById("resultValue");
+
+            const message =
+                document.getElementById("resultMessage");
+
+
+            button.disabled = true;
+
+            button.innerHTML = "⏳ Predicting...";
+
+            result.innerText = "--";
+
+            message.innerHTML =
+                "Please wait while the Machine Learning model calculates the delivery time.";
+
+
+            const data = {
+
+                Delivery_person_Age:
+                    Number(
+                        document.getElementById(
+                            "Delivery_person_Age"
+                        ).value
+                    ),
+
+                Delivery_person_Ratings:
+                    Number(
+                        document.getElementById(
+                            "Delivery_person_Ratings"
+                        ).value
+                    ),
+
+                Weatherconditions:
+                    document.getElementById(
+                        "Weatherconditions"
+                    ).value,
+
+                Road_traffic_density:
+                    document.getElementById(
+                        "Road_traffic_density"
+                    ).value,
+
+                Vehicle_condition:
+                    Number(
+                        document.getElementById(
+                            "Vehicle_condition"
+                        ).value
+                    ),
+
+                Type_of_order:
+                    document.getElementById(
+                        "Type_of_order"
+                    ).value,
+
+                Type_of_vehicle:
+                    document.getElementById(
+                        "Type_of_vehicle"
+                    ).value,
+
+                multiple_deliveries:
+                    document.getElementById(
+                        "multiple_deliveries"
+                    ).value,
+
+                Festival:
+                    document.getElementById(
+                        "Festival"
+                    ).value,
+
+                City:
+                    document.getElementById(
+                        "City"
+                    ).value,
+
+                Distance_km:
+                    Number(
+                        document.getElementById(
+                            "Distance_km"
+                        ).value
+                    )
+            };
+
+
+            try {
+
+                const response =
+                    await fetch("/predict", {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(data)
+                    });
+
+
+                const prediction =
+                    await response.json();
+                    
+
+
+                if (!response.ok || prediction.error) {
+
+                    throw new Error(
+                        prediction.error ||
+                        "Prediction failed."
+                    );
+                }
+
+
+                const time =
+                    Number(
+                        prediction.predicted_delivery_time
+                    );
+
+
+                result.innerText =
+                    time.toFixed(2);
+
+
+                message.innerHTML =
+                    "This is the predicted time taken for the delivery.";
+
+            }
+
+
+            catch (error) {
+
+                result.innerText = "--";
+
+                message.innerHTML =
+                    "❌ Error: " +
+                    error.message;
+
+            }
+
+
+            finally {
+
+                button.disabled = false;
+
+                button.innerHTML =
+                    "🚀 Predict Delivery Time";
+
+            }
+
+        });
+// =========================================================
+// AUTO UPDATE WHEN TRAFFIC CHANGES
+// =========================================================
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const trafficSelect =
+        document.getElementById("Road_traffic_density");
+
+    const predictionForm =
+        document.getElementById("predictionForm");
+
+    if (!trafficSelect || !predictionForm) {
+        console.error(
+            "Traffic auto-update setup failed: prediction form or traffic field not found."
+        );
+        return;
+    }
+
+    trafficSelect.addEventListener("change", function () {
+
+        console.log(
+            "Traffic changed to:",
+            this.value
+        );
+
+        // Trigger the SAME submit handler used by
+        // the "Predict Delivery Time" button.
+        predictionForm.requestSubmit();
+
+    });
+
+});
+// =========================================================
+// AUTO UPDATE WHEN TRAFFIC CHANGES
+// =========================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const trafficSelect =
+            document.getElementById(
+                "Road_traffic_density"
+            );
+
+        if (!trafficSelect) {
+
+            console.error(
+                "Traffic dropdown not found!"
+            );
+
+            return;
+        }
+
+
+        trafficSelect.addEventListener(
+            "change",
+            function () {
+
+                console.log(
+                    "TRAFFIC CHANGED TO:",
+                    this.value
+                );
+
+                // Directly call prediction.
+                // This reads the NEW traffic value.
+                predictDeliveryTime();
+
+            }
+        );
+
+    }
+);
+</script>
+
+
+</body>
+</html>
